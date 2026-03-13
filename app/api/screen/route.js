@@ -96,7 +96,6 @@ Keep total response under 400 words. Do not mention AI. Write as if a brilliant,
     const { data: candidates } = await serviceClient
       .from('users')
       .select('id, daily_count, last_reset, settings_json')
-      .neq('id', user.id)
       .order('daily_count', { ascending: true })
       .limit(20);
 
