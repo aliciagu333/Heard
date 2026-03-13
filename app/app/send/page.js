@@ -11,10 +11,12 @@ const TAGS = [
   { id: 'understand', label: 'Help me understand myself' },
 ];
 
-const MAX_CHARS = 3000;
+const MAX_CHARS = 500;
 
 export default function SendPage() {
-  const [content, setContent] = useState('');
+  const [q1, setQ1] = useState('');
+  const [q2, setQ2] = useState('');
+  const [q3, setQ3] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,14 +32,16 @@ export default function SendPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!content.trim() || !selectedTags.length) return;
+    if (!q1.trim() || !q2.trim() || !q3.trim() || !selectedTags.length) return;
     setLoading(true);
     setError('');
+
+    const content = `WHAT HAPPENED: ${q1.trim()}\n\nWHAT I FELT: ${q2.trim()}\n\nWHAT I'VE TRIED: ${q3.trim()}`;
 
     const res = await fetch('/api/screen', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: content.trim(), intent_tags: selectedTags }),
+      body: JSON.stringify({ content, intent_tags: selectedTags }),
     });
 
     const data = await res.json();
@@ -63,15 +67,19 @@ export default function SendPage() {
     );
   }
 
+  const canSubmit = q1.trim() && q2.trim() && q3.trim() && selectedTags.length && !loading;
+
   return (
     <>
       {crisis && <CrisisOverlay onClose={() => setCrisis(false)} />}
-      <div className="px-5 pt-6 space-y-6">
+      <div className="px-5 pt-6 space-y-6 pb-8">
         <div>
           <h1 className="text-2xl font-light text-slate-700">What&apos;s on your mind?</h1>
           <p className="text-slate-400 text-sm mt-1">Your message goes to a real person. They&apos;ll hear you.</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Tag selector */}
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">I&apos;m looking for</p>
             <div className="flex flex-wrap gap-2">
@@ -84,21 +92,61 @@ export default function SendPage() {
             </div>
             {!selectedTags.length && <p className="text-xs text-slate-300 mt-2">Choose at least one</p>}
           </div>
-          <div className="rounded-2xl bg-sky-50 p-4 space-y-2">
-            <p className="text-sm leading-relaxed"><span className="font-medium text-slate-600">1. What happened?</span> <span className="text-slate-400">(just the facts)</span></p>
-            <p className="text-sm leading-relaxed"><span className="font-medium text-slate-600">2. What did you feel</span> <span className="text-slate-400">— and how did that make you think about yourself?</span></p>
-            <p className="text-sm leading-relaxed"><span className="font-medium text-slate-600">3. What have you already tried?</span> <span className="text-slate-400">If nothing yet — what&apos;s in the way?</span></p>
+
+          {/* Q1 */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-600">
+              What happened? <span className="font-normal text-slate-400">(just the facts)</span>
+            </label>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-28 text-sm"
+                placeholder="Describe what happened…"
+                value={q1}
+                onChange={(e) => setQ1(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q1.length}/{MAX_CHARS}</span>
+            </div>
           </div>
-          <div className="relative">
-            <textarea className="input resize-none h-56"
-              placeholder="Write freely — address all three questions in whatever order feels natural…"
-              value={content}
-              onChange={(e) => setContent(e.target.value.slice(0, MAX_CHARS))}
-              required />
-            <span className="absolute bottom-3 right-4 text-xs text-slate-300">{content.length}/{MAX_CHARS}</span>
+
+          {/* Q2 */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-600">
+              What did you feel — and how did that make you think about yourself?
+            </label>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-28 text-sm"
+                placeholder="Your feelings and what they stirred up…"
+                value={q2}
+                onChange={(e) => setQ2(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q2.length}/{MAX_CHARS}</span>
+            </div>
           </div>
+
+          {/* Q3 */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-600">
+              What have you already tried? <span className="font-normal text-slate-400">If nothing yet — what&apos;s in the way?</span>
+            </label>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-28 text-sm"
+                placeholder="What you've tried, or what's blocking you…"
+                value={q3}
+                onChange={(e) => setQ3(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q3.length}/{MAX_CHARS}</span>
+            </div>
+          </div>
+
           {error && <p className="text-rose-400 text-sm">{error}</p>}
-          <button type="submit" className="btn-primary w-full" disabled={loading || !content.trim() || !selectedTags.length}>
+
+          <button type="submit" className="btn-primary w-full" disabled={!canSubmit}>
             {loading ? 'Sending…' : 'Send it out'}
           </button>
         </form>

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase-server';
 import InboxClient from './InboxClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function InboxPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import DailyLimitBanner from '@/components/DailyLimitBanner';
 
 const TAG_LABELS = {
@@ -39,6 +40,7 @@ function ResponseSection({ emoji, label, content, bg }) {
 }
 
 export default function InboxClient({ items }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [editedDraft, setEditedDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -92,6 +94,7 @@ export default function InboxClient({ items }) {
     if (data.limitReached) { setLimitReached(true); return; }
     if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
     setSent(true);
+    router.refresh();
   }
 
   function startEditing() {

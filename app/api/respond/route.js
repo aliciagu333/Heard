@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { createServiceClient } from '@/lib/supabase-server';
-import { checkLimit, incrementCount, addBonus } from '@/lib/dailyLimit';
+import { incrementCount, addBonus } from '@/lib/dailyLimit';
 
 export async function POST(request) {
   try {
@@ -37,12 +37,6 @@ export async function POST(request) {
 
     if (response.messages?.status === 'responded') {
       return NextResponse.json({ error: 'Already responded.' }, { status: 409 });
-    }
-
-    // ── Check responder's daily limit ────────────────────────────────────────
-    const { allowed } = await checkLimit(supabase, user.id);
-    if (!allowed) {
-      return NextResponse.json({ limitReached: true }, { status: 200 });
     }
 
     const finalContent = editedContent?.trim() || response.ai_draft;
