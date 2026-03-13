@@ -11,7 +11,7 @@ const TAGS = [
   { id: 'understand', label: 'Help me understand myself' },
 ];
 
-const MAX_CHARS = 1500;
+const MAX_CHARS = 3000;
 
 export default function SendPage() {
   const [content, setContent] = useState('');
