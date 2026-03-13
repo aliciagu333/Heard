@@ -14,7 +14,9 @@ const TAGS = [
 const MAX_CHARS = 500;
 
 export default function SendPage() {
-  const [content, setContent] = useState('');
+  const [q1, setQ1] = useState('');
+  const [q2, setQ2] = useState('');
+  const [q3, setQ3] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +32,9 @@ export default function SendPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!content.trim() || !selectedTags.length) return;
+    if (!q1.trim() || !q2.trim() || !q3.trim() || !selectedTags.length) return;
+
+    const content = `WHAT HAPPENED: ${q1.trim()}\n\nWHAT I FELT: ${q2.trim()}\n\nWHAT I'VE TRIED: ${q3.trim()}`;
 
     setLoading(true);
     setError('');
@@ -38,36 +42,21 @@ export default function SendPage() {
     const res = await fetch('/api/screen', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: content.trim(), intent_tags: selectedTags }),
+      body: JSON.stringify({ content, intent_tags: selectedTags }),
     });
 
     const data = await res.json();
     setLoading(false);
 
-    if (data.crisis) {
-      setCrisis(true);
-      return;
-    }
-
-    if (data.limitReached) {
-      setLimitReached(true);
-      return;
-    }
-
-    if (!res.ok) {
-      setError(data.error || 'Something went wrong. Please try again.');
-      return;
-    }
+    if (data.crisis) { setCrisis(true); return; }
+    if (data.limitReached) { setLimitReached(true); return; }
+    if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); return; }
 
     setSent(true);
   }
 
   if (limitReached) {
-    return (
-      <div className="px-5 pt-8">
-        <DailyLimitBanner />
-      </div>
-    );
+    return <div className="px-5 pt-8"><DailyLimitBanner /></div>;
   }
 
   if (sent) {
@@ -94,7 +83,8 @@ export default function SendPage() {
           <p className="text-slate-400 text-sm mt-1">Your message goes to a real person. They&apos;ll hear you.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
+
           {/* Tag selector */}
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">I&apos;m looking for</p>
@@ -115,18 +105,63 @@ export default function SendPage() {
             )}
           </div>
 
-          {/* Message textarea */}
-          <div className="relative">
-            <textarea
-              className="input resize-none h-40"
-              placeholder="Write what you're feeling…"
-              value={content}
-              onChange={(e) => setContent(e.target.value.slice(0, MAX_CHARS))}
-              required
-            />
-            <span className="absolute bottom-3 right-4 text-xs text-slate-300">
-              {content.length}/{MAX_CHARS}
-            </span>
+          {/* Q1 */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-600">
+              What happened?
+            </label>
+            <p className="text-xs text-slate-400">Just the facts.</p>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-32"
+                placeholder="Describe what happened as objectively as you can…"
+                value={q1}
+                onChange={(e) => setQ1(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">
+                {q1.length}/{MAX_CHARS}
+              </span>
+            </div>
+          </div>
+
+          {/* Q2 */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-600">
+              What did you feel — and how did that make you think about yourself?
+            </label>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-32"
+                placeholder="What emotions came up, and what did you tell yourself about who you are…"
+                value={q2}
+                onChange={(e) => setQ2(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">
+                {q2.length}/{MAX_CHARS}
+              </span>
+            </div>
+          </div>
+
+          {/* Q3 */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-600">
+              What have you already tried?
+            </label>
+            <p className="text-xs text-slate-400">If nothing yet — what&apos;s in the way?</p>
+            <div className="relative">
+              <textarea
+                className="input resize-none h-32"
+                placeholder="What actions have you taken, or what's stopping you from taking any…"
+                value={q3}
+                onChange={(e) => setQ3(e.target.value.slice(0, MAX_CHARS))}
+                required
+              />
+              <span className="absolute bottom-3 right-4 text-xs text-slate-300">
+                {q3.length}/{MAX_CHARS}
+              </span>
+            </div>
           </div>
 
           {error && <p className="text-rose-400 text-sm">{error}</p>}
@@ -134,10 +169,11 @@ export default function SendPage() {
           <button
             type="submit"
             className="btn-primary w-full"
-            disabled={loading || !content.trim() || !selectedTags.length}
+            disabled={loading || !q1.trim() || !q2.trim() || !q3.trim() || !selectedTags.length}
           >
-            {loading ? 'Sending…' : 'Send'}
+            {loading ? 'Sending…' : 'Send it out'}
           </button>
+
         </form>
       </div>
     </>
