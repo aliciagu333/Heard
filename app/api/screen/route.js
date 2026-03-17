@@ -78,7 +78,7 @@ Rules you must follow:
 - Do not use markdown asterisks, bold, or any special formatting symbols anywhere in the response
 - Write in clean plain prose throughout
 - Do not mention AI
-- Write as if a brilliant, deeply caring person who happens to have a psychology PhD wrote this — someone who makes the reader feel like their problem is the most important thing in the room right now`
+- Write as if a brilliant, deeply caring person who happens to have a psychology PhD wrote this — someone who makes the reader feel like their problem is the most important thing in the room right now`,
       messages: [{ role: 'user', content: `The person wrote:\n\n"${content}"` }],
     });
 
