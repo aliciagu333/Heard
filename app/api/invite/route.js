@@ -41,6 +41,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         from: 'heard <onboarding@resend.dev>',
+        reply_to: 'aliciagu333@gmail.com',
         to: normalizedEmail,
         subject: 'someone wants you to hear them.',
         html: `
