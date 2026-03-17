@@ -11,12 +11,10 @@ const TAGS = [
   { id: 'understand', label: 'Help me understand myself' },
 ];
 
-const MAX_CHARS = 500;
+const MAX_CHARS = 3000;
 
 export default function SendPage() {
-  const [q1, setQ1] = useState('');
-  const [q2, setQ2] = useState('');
-  const [q3, setQ3] = useState('');
+  const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,16 +30,14 @@ export default function SendPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!q1.trim() || !q2.trim() || !q3.trim() || !selectedTags.length) return;
+    if (!content.trim() || !selectedTags.length) return;
     setLoading(true);
     setError('');
-
-    const content = `WHAT HAPPENED: ${q1.trim()}\n\nWHAT I FELT: ${q2.trim()}\n\nWHAT I'VE TRIED: ${q3.trim()}`;
 
     const res = await fetch('/api/screen', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, intent_tags: selectedTags }),
+      body: JSON.stringify({ content: content.trim(), intent_tags: selectedTags }),
     });
 
     const data = await res.json();
@@ -67,19 +63,15 @@ export default function SendPage() {
     );
   }
 
-  const canSubmit = q1.trim() && q2.trim() && q3.trim() && selectedTags.length && !loading;
-
   return (
     <>
       {crisis && <CrisisOverlay onClose={() => setCrisis(false)} />}
-      <div className="px-5 pt-6 space-y-6 pb-8">
+      <div className="px-5 pt-6 space-y-6">
         <div>
           <h1 className="text-2xl font-light text-slate-700">What&apos;s on your mind?</h1>
           <p className="text-slate-400 text-sm mt-1">Your message goes to a real person. They&apos;ll hear you.</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* Tag selector */}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">I&apos;m looking for</p>
             <div className="flex flex-wrap gap-2">
@@ -93,60 +85,38 @@ export default function SendPage() {
             {!selectedTags.length && <p className="text-xs text-slate-300 mt-2">Choose at least one</p>}
           </div>
 
-          {/* Q1 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-600">
-              What happened? <span className="font-normal text-slate-400">(just the facts)</span>
-            </label>
-            <div className="relative">
-              <textarea
-                className="input resize-none h-28 text-sm"
-                placeholder="Describe what happened…"
-                value={q1}
-                onChange={(e) => setQ1(e.target.value.slice(0, MAX_CHARS))}
-                required
-              />
-              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q1.length}/{MAX_CHARS}</span>
-            </div>
+          <div className="rounded-2xl bg-sky-50 p-4 space-y-2">
+            <p className="text-sm leading-relaxed">
+              <span className="font-medium text-slate-600">1. What happened?</span>{' '}
+              <span className="text-slate-400">(just the facts)</span>
+            </p>
+            <p className="text-sm leading-relaxed">
+              <span className="font-medium text-slate-600">2. What did you feel</span>{' '}
+              <span className="text-slate-400">— and how did that make you think about yourself?</span>
+            </p>
+            <p className="text-sm leading-relaxed">
+              <span className="font-medium text-slate-600">3. What have you already tried?</span>{' '}
+              <span className="text-slate-400">If nothing yet — what&apos;s in the way?</span>
+            </p>
           </div>
 
-          {/* Q2 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-600">
-              What did you feel — and how did that make you think about yourself?
-            </label>
-            <div className="relative">
-              <textarea
-                className="input resize-none h-28 text-sm"
-                placeholder="Your feelings and what they stirred up…"
-                value={q2}
-                onChange={(e) => setQ2(e.target.value.slice(0, MAX_CHARS))}
-                required
-              />
-              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q2.length}/{MAX_CHARS}</span>
-            </div>
-          </div>
-
-          {/* Q3 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-600">
-              What have you already tried? <span className="font-normal text-slate-400">If nothing yet — what&apos;s in the way?</span>
-            </label>
-            <div className="relative">
-              <textarea
-                className="input resize-none h-28 text-sm"
-                placeholder="What you've tried, or what's blocking you…"
-                value={q3}
-                onChange={(e) => setQ3(e.target.value.slice(0, MAX_CHARS))}
-                required
-              />
-              <span className="absolute bottom-3 right-4 text-xs text-slate-300">{q3.length}/{MAX_CHARS}</span>
-            </div>
+          <div className="relative">
+            <textarea
+              className="input resize-none h-56"
+              placeholder="Write freely — address all three questions in whatever order feels natural…"
+              value={content}
+              onChange={(e) => setContent(e.target.value.slice(0, MAX_CHARS))}
+              required
+            />
+            <span className="absolute bottom-3 right-4 text-xs text-slate-300">
+              {content.length}/{MAX_CHARS}
+            </span>
           </div>
 
           {error && <p className="text-rose-400 text-sm">{error}</p>}
 
-          <button type="submit" className="btn-primary w-full" disabled={!canSubmit}>
+          <button type="submit" className="btn-primary w-full"
+            disabled={loading || !content.trim() || !selectedTags.length}>
             {loading ? 'Sending…' : 'Send it out'}
           </button>
         </form>
@@ -154,3 +124,39 @@ export default function SendPage() {
     </>
   );
 }
+```
+
+Cmd+S.
+
+---
+
+**FIX 2 — Canonical system prompt — `app / api / screen / route.js`**
+
+Find the `system: ` field and replace the entire string between the backticks with this:
+```
+You are responding to someone who needs to feel genuinely heard before anything else. They tagged their message as: ${ tagDescriptions }. Their message will address three things: what happened, what they felt and how it made them think about themselves, and what they have tried or what is in the way.
+
+Respond in exactly four parts using these exact labels on their own line:
+
+  VALIDATE:
+  Write 3 - 4 sentences in a slow, warm, unhurried tone — like someone who cleared their whole evening just to sit with them.Mirror their emotional register using their own language.Do not reframe, fix, or redirect yet.End with one sentence that names the real grief or loss underneath the surface complaint — the thing beneath the thing they described.This section should feel homey and caring, like time has slowed down and you are fully present with them.
+
+    ANALYZE:
+Shift into precise, scientific mode.Identify 2 - 3 specific psychological frameworks or concepts that explain WHY they think or behave this way — not just what they are feeling, but the underlying cognitive or emotional architecture driving it.Name each framework explicitly in plain text — for example: Social Identity Theory(Tajfel), identity foreclosure(Erikson), approval schema(Young), cognitive dissonance, negativity bias, locus of control, IFS, CBT, attachment theory.Write 4 - 5 sentences.Be specific to their exact situation, not generic.The reader should feel like a brilliant friend who has a psychology PhD is dissecting their pattern with precision and care.
+
+  EVIDENCE:
+In 3 sentences, quote or closely paraphrase specific words or phrases from their message as evidence for your analysis above.Connect their exact language to the framework you named.Show your work — this proves you were actually listening, not generating a generic response.
+
+NEXT STEPS:
+Suggest three distinct paths forward labeled exactly like this:
+1. Direct —[short label]: One paragraph.The most concrete action to address the root problem head - on.Specific, not generic.
+2. Therapeutic —[short label]: One paragraph.A named technique from psychology or therapy they can do alone.Name the specific technique(IFS parts work, CBT thought record, somatic grounding, etc.) and give enough detail that they can actually do it.
+3. Alternative —[short label]: One paragraph.A non - obvious, indirect way to shift their state or perspective that does not require confronting the problem directly.
+
+Close with one final sentence — warm, quiet, unhurried — that returns to the tone of the validate section.Something that makes them feel like you are still sitting with them even after all the analysis.
+
+Rules you must follow:
+- Do not use markdown asterisks, bold, or any special formatting symbols anywhere in the response
+  - Write in clean plain prose throughout
+    - Do not mention AI
+      - Write as if a brilliant, deeply caring person who happens to have a psychology PhD wrote this — someone who makes the reader feel like their problem is the most important thing in the room right now
