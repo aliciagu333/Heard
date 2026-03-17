@@ -23,7 +23,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { content, intent_tags } = await request.json();
+    const body = await request.json();
+    const { content, intent_tags, preferred_receiver_id } = body;
 
     if (!content?.trim() || !intent_tags?.length) {
       return NextResponse.json({ error: 'Message and at least one tag are required.' }, { status: 400 });
@@ -89,21 +90,26 @@ Rules you must follow:
     const todayMidnight = new Date();
     todayMidnight.setUTCHours(0, 0, 0, 0);
 
-    const { data: candidates } = await serviceClient
-      .from('users')
-      .select('id, daily_count, last_reset, settings_json')
-      .order('daily_count', { ascending: true })
-      .limit(20);
-
     let receiverId = null;
-    for (const candidate of candidates ?? []) {
-      const lastReset = new Date(candidate.last_reset);
-      const count = lastReset < todayMidnight ? 0 : (candidate.daily_count ?? 0);
-      const extras = candidate.settings_json?.daily_extras ?? 0;
-      const limit = 1 + extras;
-      if (count < limit) {
-        receiverId = candidate.id;
-        break;
+
+    if (preferred_receiver_id) {
+      receiverId = preferred_receiver_id;
+    } else {
+      const { data: candidates } = await serviceClient
+        .from('users')
+        .select('id, daily_count, last_reset, settings_json')
+        .order('daily_count', { ascending: true })
+        .limit(20);
+
+      for (const candidate of candidates ?? []) {
+        const lastReset = new Date(candidate.last_reset);
+        const count = lastReset < todayMidnight ? 0 : (candidate.daily_count ?? 0);
+        const extras = candidate.settings_json?.daily_extras ?? 0;
+        const limit = 1 + extras;
+        if (count < limit) {
+          receiverId = candidate.id;
+          break;
+        }
       }
     }
 
