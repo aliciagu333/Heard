@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CrisisOverlay from '@/components/CrisisOverlay';
 import DailyLimitBanner from '@/components/DailyLimitBanner';
 
@@ -21,6 +21,21 @@ export default function SendPage() {
   const [crisis, setCrisis] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const [sent, setSent] = useState(false);
+  const [friends, setFriends] = useState([]);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+
+  useEffect(() => {
+    async function loadFriends() {
+      try {
+        const res = await fetch('/api/friends');
+        if (res.ok) {
+          const data = await res.json();
+          setFriends(data.friends ?? []);
+        }
+      } catch { }
+    }
+    loadFriends();
+  }, []);
 
   function toggleTag(id) {
     setSelectedTags((prev) =>
@@ -37,7 +52,11 @@ export default function SendPage() {
     const res = await fetch('/api/screen', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: content.trim(), intent_tags: selectedTags }),
+      body: JSON.stringify({
+        content: content.trim(),
+        intent_tags: selectedTags,
+        preferred_receiver_id: selectedFriend ?? undefined,
+      }),
     });
 
     const data = await res.json();
@@ -57,7 +76,9 @@ export default function SendPage() {
         <div className="card py-10 space-y-3">
           <p className="text-3xl">💙</p>
           <p className="text-slate-700 font-medium text-lg">Your message is on its way.</p>
-          <p className="text-slate-400 text-sm leading-relaxed">Someone will hear you soon. You&apos;ll find their response in your history.</p>
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Someone will hear you soon. You&apos;ll find their response in your history.
+          </p>
         </div>
       </div>
     );
@@ -72,6 +93,8 @@ export default function SendPage() {
           <p className="text-slate-400 text-sm mt-1">Your message goes to a real person. They&apos;ll hear you.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Tag selector */}
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">I&apos;m looking for</p>
             <div className="flex flex-wrap gap-2">
@@ -85,6 +108,7 @@ export default function SendPage() {
             {!selectedTags.length && <p className="text-xs text-slate-300 mt-2">Choose at least one</p>}
           </div>
 
+          {/* 3 questions prompt box */}
           <div className="rounded-2xl bg-sky-50 p-4 space-y-2">
             <p className="text-sm leading-relaxed">
               <span className="font-medium text-slate-600">1. What happened?</span>{' '}
@@ -100,6 +124,7 @@ export default function SendPage() {
             </p>
           </div>
 
+          {/* Single text box */}
           <div className="relative">
             <textarea
               className="input resize-none h-56"
@@ -112,6 +137,32 @@ export default function SendPage() {
               {content.length}/{MAX_CHARS}
             </span>
           </div>
+
+          {/* Friend selector */}
+          {friends.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-widest text-slate-400 mb-3">Send to</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFriend(null)}
+                  className={`tag-pill ${selectedFriend === null ? 'tag-pill-active' : 'tag-pill-inactive'}`}
+                >
+                  Anyone available
+                </button>
+                {friends.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setSelectedFriend(f.id)}
+                    className={`tag-pill ${selectedFriend === f.id ? 'tag-pill-active' : 'tag-pill-inactive'}`}
+                  >
+                    {f.display_name || f.email}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-rose-400 text-sm">{error}</p>}
 
